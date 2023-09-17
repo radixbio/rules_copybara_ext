@@ -1,0 +1,127 @@
+#+title: rules_copybara
+
+A Bazel rule that wraps [[github:google/copybara][Copybara]], a google-built tool for working with multiple repos
+* Installation
+add this to your repo's WORKSPACE file (bazel =5.3.1=)
+#+begin_src python
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+# TODO this chunk is wrong for external consumption, it should be a git_repository or http_archive with a release
+local_repository(
+    name = "com_github_rules_copybara",
+    path = "."
+)
+
+
+load("@com_github_rules_copybara//:copybara.bzl", "copybara_config")
+
+copybara_config(
+    copybara_version = "6cd6432036fd47ba13737aa2ab3703ebf7a8a8cb",
+    copybara_sha256 = "6601b287c39a08eb5c6e5ed15c920ed2bfeb9140220190ef29c117f2abe5b55d"
+)
+
+load("@com_github_rules_copybara//:copybara_dependencies.bzl", "copybara_dependency")
+
+copybara_dependency()
+
+load("@com_github_google_copybara//:repositories.bzl", "copybara_repositories")
+
+copybara_repositories()
+
+load("@com_github_google_copybara//:repositories.maven.bzl", "copybara_maven_repositories")
+
+copybara_maven_repositories()
+
+load("@com_github_google_copybara//:repositories.go.bzl", "copybara_go_repositories")
+
+copybara_go_repositories()
+
+#+end_src
+* Usage
+** Getting started
+Follow the instructions in the [[*Installation][Installation]] section
+** Examples
+*** External repository pulled in to source tree
+**** a simple example
+in =scalaz3.sky=
+#+begin_src python
+core.workflow(
+    name = "z3",
+    origin = git.origin(
+        url = "https://github.com/Z3Prover/z3.git",
+        ref = "z3-4.11.2",
+    ),
+    origin_files = glob(["**"]),
+    destination = folder.destination(),
+    destination_files = glob(["**"]),
+    authoring = authoring.pass_thru("z3 copybara update <copybara@radix.bio>"),
+    transformations = [
+        patch.apply(patches = ["examples/z3.patch"], strip = 0),
+    ],
+)
+
+#+end_src
+
+and the rule invocation in a =BUILD= file
+#+begin_src python
+copybara(
+    name = "z3-copybara-import", # name of the rule
+    additional_files = ["//examples:z3.patch"], # additional files you may need
+    destination_dir = "3rdparty/copybara/z3", # to land in the source tree of the repo with this BUILD file
+    workflow_defs = "//examples:z3.sky", # the workflow definition
+    workflows = ["z3"], # select which workflows to run
+)
+#+end_src
+**** a (slightly) more complex example
+in =scalaz3.sky=
+#+begin_src python
+core.workflow(
+    name = "scalaz3",
+    origin = git.origin(
+        url = "https://github.com/epfl-lara/ScalaZ3.git",
+        ref = "f0869281a7a42a1ed336b9e9259518c0c75acaa9",
+    ),
+    origin_files = glob(["**"], exclude = ["build.sbt", "project"]),
+    destination = folder.destination(),
+    destination_files = glob(["**"]),
+    authoring = authoring.pass_thru("scalaz3 copybara update <copybara@radix.bio>"),
+    transformations = [
+        patch.apply(patches = ["examples/scalaz3.patch"], strip = 0),
+        core.replace(
+            before = """import org.scalatest.{FunSuite, Matchers}""",
+            after = """import org.scalatest.funsuite.AnyFunSuite\nimport org.scalatest.matchers.should.Matchers""",
+            paths = glob(["src/test/**/*.scala"]),
+        ),
+        core.replace(
+            before = "extends FunSuite",
+            after = "extends AnyFunSuite",
+            paths = glob(["src/test/**/*.scala"]),
+        ),
+    ],
+)
+
+#+end_src
+
+and the corresponding build target
+#+begin_src python
+copybara(
+    name = "scalaz3-copybara-import",
+    additional_files = ["//copybara/workflow_files:scalaz3.patch"],
+    destination_dir = "3rdparty/copybara/scalaz3",
+    workflow_defs = "//copybara/workflow_files:scalaz3.sky",
+    workflows = ["scalaz3"],
+    deps = [":z3-copybara-import"]
+)
+#+end_src
+*** STRT Push out a folder to an external repository
+
+*** STRT Synchronize pull requests from an external GitHub repository
+** Things to keep in mind
+- Copybara does not have CI on its repo, so not all commit hashes work.
+- Copybara includes bazel's source tree itself in its dependencies, and not all versions of bazel can build bazel. At the time of writing, latest master works only on bazel =6.0.0=, whereas the version I use (since i'm on bazel =5.3.1=) works with commit =6cd64320=
+
+* Contributing
+
+* Authors
+- Dhasharath Shrivathsa <me@dha.sh>
+- Shaan Hashmi <hashmishaana@gmail.com>
