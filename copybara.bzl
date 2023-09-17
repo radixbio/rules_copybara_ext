@@ -130,20 +130,18 @@ def _copybara_move_commits_impl(ctx):
             "{push_files}": ctx.attr.push_files,
             "{destination_files}": ctx.attr.destination_files,
             "{mode}": ctx.attr.mode,
-            "{push_transformations}": str(ctx.attr.push_transformations).replace('\\"', "🛐").replace('"', '').replace("🛐", '"'),
-            "{pr_transformations}": str(ctx.attr.pr_transformations).replace('\\"', "🛐").replace('"', '').replace("🛐", '"')
-        }
+            "{push_transformations}": str(ctx.attr.push_transformations).replace('\\"', "🛐").replace('"', "").replace("🛐", '"'),
+            "{pr_transformations}": str(ctx.attr.pr_transformations).replace('\\"', "🛐").replace('"', "").replace("🛐", '"'),
+        },
     )
 
     copybara = ctx.attr._copybara[DefaultInfo]
     command = []
     command.append(copybara.files_to_run.executable.short_path)
 
-
     # append additional command line args
     if ctx.attr.cli_args != "":
         command.append(str(ctx.attr.cli_args))
-
 
     ctx.actions.write(
         output = ctx.outputs.executable,
@@ -153,52 +151,50 @@ def _copybara_move_commits_impl(ctx):
         rm -f copy.bara.sky
         cp {tmpl} copy.bara.sky
         {command} migrate copy.bara.sky push
-        """.format(tmpl = str(push.short_path),
-                   command = " ".join(command))
-
+        """.format(
+            tmpl = str(push.short_path),
+            command = " ".join(command),
+        ),
     )
 
     return DefaultInfo(
         executable = ctx.outputs.executable,
-        runfiles = ctx.runfiles(files = [push] + copybara.files.to_list() + copybara.default_runfiles.files.to_list())
+        runfiles = ctx.runfiles(files = [push] + copybara.files.to_list() + copybara.default_runfiles.files.to_list()),
     )
-
-
-
 
 default_push_transformations = [
     'metadata.restore_author("ORIGINAL_AUTHOR", search_all_changes = True)',
-    'metadata.expose_label("COPYBARA_INTEGRATE_REVIEW")'
+    'metadata.expose_label("COPYBARA_INTEGRATE_REVIEW")',
 ]
 copybara_move_commits = rule(
     implementation = _copybara_move_commits_impl,
     attrs = {
         "sot_repo": attr.string(
-            mandatory = True
+            mandatory = True,
         ),
         "sot_branch": attr.string(
-            mandatory = True
+            mandatory = True,
         ),
         "dest_repo": attr.string(
-            mandatory = True
+            mandatory = True,
         ),
         "dest_branch": attr.string(
-            mandatory = True
+            mandatory = True,
         ),
         "committer": attr.string(),
-        "push_files": attr.string(), # this is a string since the workflow can run on foreign repos
+        "push_files": attr.string(),  # this is a string since the workflow can run on foreign repos
         "destination_files": attr.string(),
         "mode": attr.string(
-            default = "ITERATIVE"
+            default = "ITERATIVE",
         ),
         "push_transformations": attr.string_list(
-            default = default_push_transformations
+            default = default_push_transformations,
         ),
         "pr_transformations": attr.string_list(
-            default = []
+            default = [],
         ),
         "cli_args": attr.string(
-            mandatory = False
+            mandatory = False,
         ),
         "_copybara": attr.label(
             allow_files = True,
@@ -206,10 +202,10 @@ copybara_move_commits = rule(
         ),
         "_tmpl": attr.label(
             allow_single_file = True,
-            default = "//:push.bara.sky.tmpl"
-        )
+            default = "//:push.bara.sky.tmpl",
+        ),
     },
-    executable = True
+    executable = True,
 )
 
 def _copybara_move_github_pr_impl(ctx):
@@ -226,8 +222,8 @@ def _copybara_move_github_pr_impl(ctx):
             "{push_files}": ctx.attr.push_files,
             "{destination_files}": ctx.attr.destination_files,
             "{mode}": ctx.attr.mode,
-            "{pr_transformations}": str(ctx.attr.pr_transformations).replace('\\"', "🛐").replace('"', '').replace("🛐", '"').replace("{destinationRepo}", ctx.attr.dest_repo)
-        }
+            "{pr_transformations}": str(ctx.attr.pr_transformations).replace('\\"', "🛐").replace('"', "").replace("🛐", '"').replace("{destinationRepo}", ctx.attr.dest_repo),
+        },
     )
 
     copybara = ctx.attr._copybara[DefaultInfo]
@@ -240,47 +236,49 @@ def _copybara_move_github_pr_impl(ctx):
         rm -f copy.bara.sky
         cp {tmpl} copy.bara.sky
         {command} migrate copy.bara.sky pr $@
-        """.format(tmpl = str(push.short_path),
-                   command = str(copybara.files_to_run.executable.short_path))
-
+        """.format(
+            tmpl = str(push.short_path),
+            command = str(copybara.files_to_run.executable.short_path),
+        ),
     )
 
     return DefaultInfo(
         executable = ctx.outputs.executable,
-        runfiles = ctx.runfiles(files = [push] + copybara.files.to_list() + copybara.default_runfiles.files.to_list())
+        runfiles = ctx.runfiles(files = [push] + copybara.files.to_list() + copybara.default_runfiles.files.to_list()),
     )
 
 default_move_pr_transformations = [
     'metadata.save_author("ORIGINAL_AUTHOR")',
-    'metadata.expose_label("GITHUB_PR_NUMBER", new_name = "Closes", separator = "{destinationRepo}".replace("git@github.com", " ").replace(".git", "#"))'
+    'metadata.expose_label("GITHUB_PR_NUMBER", new_name = "Closes", separator = "{destinationRepo}".replace("git@github.com", " ").replace(".git", "#"))',
 ]
+
 # move from dest to sot
 copybara_move_github_pr = rule(
     implementation = _copybara_move_github_pr_impl,
     attrs = {
         "sot_repo": attr.string(
-            mandatory = True
+            mandatory = True,
         ),
         "sot_branch": attr.string(
-            mandatory = True
+            mandatory = True,
         ),
         "dest_repo": attr.string(
-            mandatory = True
+            mandatory = True,
         ),
         "dest_branch": attr.string(
-            mandatory = True
+            mandatory = True,
         ),
         "committer": attr.string(),
-        "push_files": attr.string(), # this is a string since the workflow can run on foreign repos
+        "push_files": attr.string(),  # this is a string since the workflow can run on foreign repos
         "destination_files": attr.string(),
         "mode": attr.string(
-            default = "CHANGE_REQUEST"
+            default = "CHANGE_REQUEST",
         ),
         "pr_transformations": attr.string_list(
-            default = default_move_pr_transformations
+            default = default_move_pr_transformations,
         ),
         "cli_args": attr.string(
-            mandatory = False
+            mandatory = False,
         ),
         "_copybara": attr.label(
             allow_files = True,
@@ -288,12 +286,11 @@ copybara_move_github_pr = rule(
         ),
         "_tmpl": attr.label(
             allow_single_file = True,
-            default = ":pr.bara.sky.tmpl"
-        )
+            default = ":pr.bara.sky.tmpl",
+        ),
     },
-    executable = True
+    executable = True,
 )
-
 
 def _store_copybara_config(repository_ctx):
     version = repository_ctx.attr.copybara_version
@@ -325,5 +322,5 @@ def copybara_config(
     _config_repository(
         name = "com_github_rules_copybara_config",
         copybara_version = copybara_version,
-        copybara_sha256 = copybara_sha256
+        copybara_sha256 = copybara_sha256,
     )

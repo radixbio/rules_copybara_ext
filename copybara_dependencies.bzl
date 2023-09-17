@@ -1,5 +1,5 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-load("@com_github_rules_copybara_config//:config.bzl", "COPYBARA_VERSION", "COPYBARA_SHA256")
+load("@com_github_rules_copybara_config//:config.bzl", "COPYBARA_SHA256", "COPYBARA_VERSION")
 
 def copybara_dependency():
     http_archive(
