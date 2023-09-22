@@ -1,6 +1,10 @@
 #+title: Changelog
 
-
+* <2023-09-22 Fri>
+- updated docs a bit
+- deprecated repo to move this rule into our core codebase
+- write build rules to make this open-source itself
+- further debugging of the pull request workflow needs to be done
 * <2023-02-14 Tue>
 - make things work with nested dependencies
 - add shaan as a contributor
