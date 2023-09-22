@@ -114,7 +114,33 @@ copybara(
 )
 #+end_src
 *** STRT Push out a folder to an external repository
-This is where somethings get more complicated, so we've developed some special-purpose templates for this kind of thing. We're happy to accept contributions of new rules if you have additional workflows/use cases. Take a look at this template [[file:push.bara.sky.tmpl][Push commits template]]
+This is where somethings get more complicated, so we've developed some special-purpose templates for this kind of thing. We're happy to accept contributions of new rules if you have additional workflows/use cases. Take a look at this template [[file:push.bara.sky.tmpl][Push commits template]].
+
+This moves commits from one "source of truth" repository at a path to another repository. It's pretty useful in a monorepo context where one would like to share a folder with some patches to the external world. NB: this is a one-way thing, so external pull requests/changes get clobbered.
+
+Here's the rule invocation we use from our internal monorepo to create this repo
+
+#+begin_src python
+load("@com_github_rules_copybara//:copybara.bzl", "copybara", "copybara_move_commits", "copybara_move_github_pr", "default_push_transformations")
+
+# sot -> dest repo
+copybara_move_commits(
+    name = "sot-to-ext",
+    committer = "copybara <copybara@example.com>",
+    dest_branch = "main",
+    dest_repo = "git@github.com:radixbio/rules_copybara_ext.git",
+    destination_files = 'glob(["**"])',
+    push_files = 'glob(["bazel/rules/rules_copybara/**"])',
+    push_transformations = default_push_transformations + [
+        'core.move("bazel/rules/rules_copybara", "")',
+    ],
+    sot_branch = "main",  # TODO when this gets merged to main, change this to main
+    sot_repo = "git@github.com:radixbio/monorepo.git",
+)
+#+end_src
+
+The `copybara <copybara@radix.bio>` committer moves the `bazel/rules/rules_copybara/**` files to `rules_copybara_ext`, and uses a `push_transformations` to re-root the files in that directory.
+
 
 *** STRT Synchronize pull requests from an external GitHub repository
 ** Things to keep in mind
