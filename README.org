@@ -114,6 +114,7 @@ copybara(
 )
 #+end_src
 *** STRT Push out a folder to an external repository
+This is where somethings get more complicated, so we've developed some special-purpose templates for this kind of thing. We're happy to accept contributions of new rules if you have additional workflows/use cases. Take a look at this template [[file:push.bara.sky.tmpl][Push commits template]]
 
 *** STRT Synchronize pull requests from an external GitHub repository
 ** Things to keep in mind
