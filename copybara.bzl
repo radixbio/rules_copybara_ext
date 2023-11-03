@@ -116,8 +116,11 @@ copybara = rule(
     executable = True,
 )
 
+def _str(instr):
+    return str(instr).replace('\\"', "🛐").replace('"', "").replace("🛐", '"')
+
 def _copybara_move_commits_impl(ctx):
-    push = ctx.actions.declare_file("push.bara.sky")
+    push = ctx.actions.declare_file(ctx.attr.name + "-push.bara.sky")
     ctx.actions.expand_template(
         template = ctx.file._tmpl,
         output = push,
@@ -130,8 +133,8 @@ def _copybara_move_commits_impl(ctx):
             "{push_files}": ctx.attr.push_files,
             "{destination_files}": ctx.attr.destination_files,
             "{mode}": ctx.attr.mode,
-            "{push_transformations}": str(ctx.attr.push_transformations).replace('\\"', "🛐").replace('"', "").replace("🛐", '"'),
-            "{pr_transformations}": str(ctx.attr.pr_transformations).replace('\\"', "🛐").replace('"', "").replace("🛐", '"'),
+            "{push_transformations}": _str(ctx.attr.push_transformations),
+            "{pr_transformations}": _str(ctx.attr.pr_transformations),
         },
     )
 
