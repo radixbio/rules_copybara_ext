@@ -1,0 +1,11 @@
+module(
+    name = "rules_copybara",
+    repo_name = "rules_copybara"
+)
+
+copybara_config_ext = use_extension("//:extensions.bzl", "copybara_config_extension")
+copybara_config_ext.version(version = "6cd6432036fd47ba13737aa2ab3703ebf7a8a8cb")
+copybara_config_ext.sha256(sha256 ="6601b287c39a08eb5c6e5ed15c920ed2bfeb9140220190ef29c117f2abe5b55d" )
+
+copybara_dependency_ext = use_extension("//:extensions.bzl", "copybara_dependency_extension")
+use_repo(copybara_dependency_ext, "com_github_google_copybara")
