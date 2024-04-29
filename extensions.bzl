@@ -1,5 +1,5 @@
-load("//:copybara_dependencies.bzl", "copybara_dependency")
 load("//:copybara.bzl", "copybara_config")
+load("//:copybara_dependencies.bzl", "copybara_dependency")
 
 def _copybara_dependency_impl(_ctx):
     copybara_dependency()
