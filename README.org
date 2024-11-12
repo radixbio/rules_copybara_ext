@@ -141,6 +141,27 @@ copybara_move_commits(
 
 The `copybara <copybara@radix.bio>` committer moves the `bazel/rules/rules_copybara/**` files to `rules_copybara_ext`, and uses a `push_transformations` to re-root the files in that directory.
 
+This is a reference to a remote repository, but the =git.origin= block can also contain a =file://= path reference, so to flesh this out:
+
+#+begin_src python
+# sot -> dest repo
+copybara_move_commits(
+    name = "sot-to-ext",
+    committer = "copybara <copybara@example.com>",
+    dest_branch = "main",
+    dest_repo = "git@github.com:radixbio/rules_copybara_ext.git",
+    destination_files = 'glob(["**"])',
+    push_files = 'glob(["bazel/rules/rules_copybara/**"])',
+    push_transformations = default_push_transformations + [
+        'core.move("bazel/rules/rules_copybara", "")',
+    ],
+    sot_branch = "main",  # TODO when this gets merged to main, change this to main
+    sot_repo = "file:///home/radix/monorepo",
+)
+#+end_src
+
+and if it's the first time that the repo is being pushed, you should call copybara once, manually in order to create the initial commit. Use the =cli_args= variable and set it to =--init-history --force= to perform the initialization
+
 
 *** STRT Synchronize pull requests from an external GitHub repository
 ** Things to keep in mind
